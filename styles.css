@@ -71,7 +71,7 @@ body {
 .app-header {
     background-color: var(--primary-white);
     border-bottom: 1px solid var(--gray-200);
-    padding: var(--space-lg) var(--space-xl);
+    padding: var(--space-md) var(--space-xl);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -86,20 +86,22 @@ body {
 .app-brand {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: var(--space-md);
 }
 
 .brand-logo {
-    width: 32px;
-    height: 32px;
-    background-color: var(--primary-black);
-    color: var(--primary-white);
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 18px;
+}
+
+.caleche-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
 }
 
 .brand-name {
@@ -112,6 +114,7 @@ body {
     font-size: 14px;
     color: var(--gray-600);
     font-weight: 400;
+    margin-left: 52px; /* Align with brand name */
 }
 
 /* Main Content */
@@ -1035,5 +1038,13 @@ body {
     
     .card-tip-btn {
         min-width: calc(50% - 8px);
+    }
+    
+    .app-header {
+        padding: var(--space-md) var(--space-lg);
+    }
+    
+    .brand-name {
+        font-size: 18px;
     }
 }
