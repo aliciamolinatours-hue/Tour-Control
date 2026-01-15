@@ -55,7 +55,6 @@ const elements = {
     cashToursAmount: document.getElementById('cash-tours-amount'),
     cashTipsAmount: document.getElementById('cash-tips-amount'),
     revenueCalculation: document.getElementById('revenue-calculation'),
-    exportDataButton: document.getElementById('export-data-btn'),
     
     // Stats Tab
     statsMonthSelect: document.getElementById('stats-month-select'),
@@ -69,6 +68,7 @@ const elements = {
     cardPercentage: document.getElementById('card-percentage'),
     topBreakdownList: document.getElementById('top-breakdown-list'),
     sortButtons: document.querySelectorAll('.sort-btn'),
+    exportDataButton: document.getElementById('export-data-btn'),
     
     // Templates
     countrySuggestionTemplate: document.getElementById('country-suggestion-template'),
@@ -326,7 +326,7 @@ function saveTour() {
     showNotification('Tour saved successfully!', 'success');
 }
 
-// Reset Form - Ahora funciona correctamente
+// Reset Form
 function resetForm() {
     // Reset passenger selection to 1
     elements.passengerButtons.forEach((btn, index) => {
