@@ -8,7 +8,8 @@ const COUNTRIES = [
     'Ukraine', 'Romania', 'Bulgaria', 'Croatia', 'Serbia', 'Slovakia', 'Slovenia',
     'Lithuania', 'Latvia', 'Estonia', 'Luxembourg', 'Malta', 'Cyprus', 'Iceland',
     'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Australia',
-    'Japan', 'China', 'South Korea', 'India', 'Thailand', 'Vietnam', 'Singapore'
+    'Japan', 'China', 'South Korea', 'India', 'Thailand', 'Vietnam', 'Singapore',
+    'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Oman', 'Bahrain'
 ];
 
 // State Management
@@ -18,8 +19,10 @@ const state = {
     selectedPaymentMethod: 'cash',
     selectedTip: 0,
     customTip: '',
+    cardCustomTip: '',
     countryInput: '',
-    activeTab: 'new-tour'
+    activeTab: 'new-tour',
+    breakdownSortBy: 'tours' // 'tours' or 'pax'
 };
 
 // DOM Elements
@@ -34,6 +37,8 @@ const elements = {
     cashTipSection: document.getElementById('cash-tip-section'),
     cardTipSection: document.getElementById('card-tip-section'),
     customTipInput: document.getElementById('custom-tip-input'),
+    cardTipButtons: document.querySelectorAll('.card-tip-btn'),
+    cardCustomTipInput: document.getElementById('card-custom-tip-input'),
     saveTourButton: document.getElementById('save-tour-btn'),
     todayToursList: document.getElementById('today-tours-list'),
     todayTotalTours: document.getElementById('today-total-tours'),
@@ -62,17 +67,17 @@ const elements = {
     cardBar: document.getElementById('card-bar'),
     cashPercentage: document.getElementById('cash-percentage'),
     cardPercentage: document.getElementById('card-percentage'),
-    topCountriesList: document.getElementById('top-countries-list'),
+    topBreakdownList: document.getElementById('top-breakdown-list'),
+    sortButtons: document.querySelectorAll('.sort-btn'),
     
     // Templates
     countrySuggestionTemplate: document.getElementById('country-suggestion-template'),
     tourItemTemplate: document.getElementById('tour-item-template'),
-    countryStatTemplate: document.getElementById('country-stat-template'),
+    breakdownItemTemplate: document.getElementById('breakdown-item-template'),
     
     // Navigation
-    tabButtons: document.querySelectorAll('.tab-btn'),
-    tabContents: document.querySelectorAll('.tab-content'),
     navItems: document.querySelectorAll('.nav-item'),
+    tabContents: document.querySelectorAll('.tab-content'),
     
     // Date displays
     currentDate: document.getElementById('current-date')
@@ -134,9 +139,32 @@ function setupEventListeners() {
         });
     });
 
-    // Custom tip input
+    // Card tip buttons
+    elements.cardTipButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.cardTipButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const tipValue = btn.dataset.tip;
+            if (tipValue === 'custom') {
+                elements.cardCustomTipInput.classList.remove('hidden');
+                state.selectedTip = state.cardCustomTip ? parseFloat(state.cardCustomTip) : 0;
+            } else {
+                elements.cardCustomTipInput.classList.add('hidden');
+                state.selectedTip = parseFloat(tipValue);
+            }
+        });
+    });
+
+    // Custom tip input for cash
     elements.customTipInput.addEventListener('input', (e) => {
         state.customTip = e.target.value;
+    });
+
+    // Custom tip input for card
+    elements.cardCustomTipInput.addEventListener('input', (e) => {
+        state.cardCustomTip = e.target.value;
+        state.selectedTip = parseFloat(e.target.value) || 0;
     });
 
     // Save tour button
@@ -144,14 +172,6 @@ function setupEventListeners() {
 
     // Export data button
     elements.exportDataButton.addEventListener('click', exportData);
-
-    // Tab navigation
-    elements.tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabId = btn.dataset.tab;
-            switchTab(tabId);
-        });
-    });
 
     // Bottom navigation
     elements.navItems.forEach(item => {
@@ -163,6 +183,16 @@ function setupEventListeners() {
 
     // Month selector for stats
     elements.statsMonthSelect.addEventListener('change', updateStatsTab);
+
+    // Sort buttons for breakdown
+    elements.sortButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.sortButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.breakdownSortBy = btn.dataset.sort;
+            updateStatsTab();
+        });
+    });
 
     // Close suggestions when clicking outside
     document.addEventListener('click', (e) => {
@@ -176,12 +206,12 @@ function setupEventListeners() {
 function switchTab(tabId) {
     state.activeTab = tabId;
     
-    // Update tab buttons
-    elements.tabButtons.forEach(btn => {
-        if (btn.dataset.tab === tabId) {
-            btn.classList.add('active');
+    // Update bottom navigation
+    elements.navItems.forEach(item => {
+        if (item.dataset.tab === tabId) {
+            item.classList.add('active');
         } else {
-            btn.classList.remove('active');
+            item.classList.remove('active');
         }
     });
     
@@ -191,15 +221,6 @@ function switchTab(tabId) {
             content.classList.add('active');
         } else {
             content.classList.remove('active');
-        }
-    });
-    
-    // Update bottom navigation
-    elements.navItems.forEach(item => {
-        if (item.dataset.tab === tabId) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
         }
     });
     
@@ -334,7 +355,19 @@ function resetForm() {
     elements.cardTipSection.style.display = 'none';
     elements.customTipInput.value = '';
     state.customTip = '';
-    state.selectedTip = 0;
+    
+    // Reset card tip selection
+    elements.cardTipButtons.forEach((btn, index) => {
+        if (index === 1) { // €0 button
+            btn.classList.add('active');
+            state.selectedTip = 0;
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    elements.cardCustomTipInput.value = '';
+    elements.cardCustomTipInput.classList.add('hidden');
+    state.cardCustomTip = '';
 }
 
 // Update New Tour Tab
@@ -493,23 +526,33 @@ function updateStatsTab() {
     const cashPercentage = totalTours > 0 ? Math.round((cashTours / totalTours) * 100) : 0;
     const cardPercentage = totalTours > 0 ? Math.round((cardTours / totalTours) * 100) : 0;
     
-    // Country statistics
+    // Country statistics for breakdown
     const countryStats = {};
     monthlyTours.forEach(tour => {
         if (!countryStats[tour.country]) {
             countryStats[tour.country] = {
-                count: 0,
-                revenue: 0
+                tours: 0,
+                pax: 0
             };
         }
-        countryStats[tour.country].count++;
-        countryStats[tour.country].revenue += tour.amount + tour.tip;
+        countryStats[tour.country].tours++;
+        countryStats[tour.country].pax += tour.passengers;
     });
     
-    // Sort countries by revenue
-    const sortedCountries = Object.entries(countryStats)
-        .sort((a, b) => b[1].revenue - a[1].revenue)
-        .slice(0, 5);
+    // Convert to array and sort based on selected criteria
+    let breakdownData = Object.entries(countryStats).map(([country, stats]) => ({
+        country,
+        ...stats
+    }));
+    
+    if (state.breakdownSortBy === 'tours') {
+        breakdownData.sort((a, b) => b.tours - a.tours);
+    } else {
+        breakdownData.sort((a, b) => b.pax - a.pax);
+    }
+    
+    // Take top 5
+    breakdownData = breakdownData.slice(0, 5);
     
     // Update UI
     elements.statsTotalTours.textContent = totalTours;
@@ -523,31 +566,30 @@ function updateStatsTab() {
     elements.cashPercentage.textContent = `${cashPercentage}%`;
     elements.cardPercentage.textContent = `${cardPercentage}%`;
     
-    // Update top countries list
-    elements.topCountriesList.innerHTML = '';
+    // Update breakdown list
+    elements.topBreakdownList.innerHTML = '';
     
-    if (sortedCountries.length === 0) {
+    if (breakdownData.length === 0) {
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
         emptyState.innerHTML = `
             <i class="fas fa-globe-europe"></i>
-            <p>No country data available</p>
+            <p>No breakdown data available</p>
         `;
-        elements.topCountriesList.appendChild(emptyState);
+        elements.topBreakdownList.appendChild(emptyState);
     } else {
-        sortedCountries.forEach(([country, stats]) => {
-            const template = elements.countryStatTemplate.content.cloneNode(true);
-            const countryItem = template.querySelector('.country-stat-item');
-            
-            const countryName = countryItem.querySelector('.country-name');
-            const countryTours = countryItem.querySelector('.country-tours');
-            const countryRevenue = countryItem.querySelector('.country-revenue');
-            
-            countryName.textContent = country;
-            countryTours.textContent = `${stats.count} tours`;
-            countryRevenue.textContent = `€${stats.revenue.toFixed(2)}`;
-            
-            elements.topCountriesList.appendChild(countryItem);
+        breakdownData.forEach(item => {
+            const breakdownItem = document.createElement('div');
+            breakdownItem.className = 'breakdown-item';
+            breakdownItem.innerHTML = `
+                <div class="breakdown-country">${item.country}</div>
+                <div class="breakdown-stats">
+                    <span class="breakdown-tours">${item.tours} tours</span>
+                    <span class="breakdown-separator">|</span>
+                    <span class="breakdown-pax">${item.pax} pax</span>
+                </div>
+            `;
+            elements.topBreakdownList.appendChild(breakdownItem);
         });
     }
 }
