@@ -93,7 +93,14 @@ body {
 .app-brand {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--space-md);
+}
+
+.brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-black);
 }
 
 .brand-logo {
@@ -111,17 +118,12 @@ body {
     border-radius: var(--radius-sm);
 }
 
-.brand-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--primary-black);
-}
-
 .header-date {
     font-size: 14px;
     color: var(--gray-600);
     font-weight: 400;
-    margin-left: 52px; /* Align with brand name */
+    margin-right: 52px; /* Align with brand name */
+    text-align: left;
 }
 
 /* Main Content */
