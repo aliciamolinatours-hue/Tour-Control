@@ -1,565 +1,368 @@
-:root {
-    /* Colors */
-    --primary: #3B82F6;
-    --primary-dark: #2563EB;
-    --secondary: #10B981;
-    --secondary-light: #D1FAE5;
-    --accent: #60A5FA;
-    --danger: #EF4444;
-    --warning: #F59E0B;
+// Constants
+const FIXED_AMOUNT = 70;
+const TIP_OPTIONS = [0, 7, 10.5, 14];
+const COUNTRIES = [
+    'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium',
+    'Bosnia and Herzegovina', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic',
+    'Denmark', 'Estonia', 'Finland', 'France', 'Georgia', 'Germany', 'Greece',
+    'Hungary', 'Iceland', 'Ireland', 'Italy', 'Kazakhstan', 'Kosovo', 'Latvia',
+    'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malta', 'Moldova', 'Monaco',
+    'Montenegro', 'Netherlands', 'North Macedonia', 'Norway', 'Poland', 'Portugal',
+    'Romania', 'Russia', 'San Marino', 'Serbia', 'Slovakia', 'Slovenia', 'Spain',
+    'Sweden', 'Switzerland', 'Turkey', 'Ukraine', 'United Kingdom', 'Vatican City'
+];
+
+// State
+let tours = JSON.parse(localStorage.getItem('tours')) || [];
+let selectedPassengers = 1;
+let selectedPaymentMethod = 'cash';
+let selectedTip = 0;
+let customTip = '';
+let countryInput = '';
+
+// DOM Elements
+const todayToursElement = document.getElementById('today-tours');
+const passengerButtons = document.querySelectorAll('.passenger-btn');
+const paymentButtons = document.querySelectorAll('.payment-btn');
+const tipButtons = document.querySelectorAll('.tip-btn');
+const countryInputElement = document.getElementById('country-input');
+const suggestionsContainer = document.getElementById('country-suggestions');
+const cashTipSection = document.getElementById('cash-tip-section');
+const cardTipSection = document.getElementById('card-tip-section');
+const customTipInput = document.getElementById('custom-tip-input');
+const saveTourButton = document.getElementById('save-tour-btn');
+const toursListElement = document.getElementById('tours-list');
+const tourTemplate = document.getElementById('tour-template');
+
+// Initialize
+function init() {
+    updateTodayStats();
+    renderToursList();
+    setupEventListeners();
+}
+
+// Event Listeners
+function setupEventListeners() {
+    // Passenger buttons
+    passengerButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            passengerButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            selectedPassengers = parseInt(button.dataset.passengers);
+        });
+    });
+
+    // Payment buttons
+    paymentButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            paymentButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            selectedPaymentMethod = button.dataset.payment;
+            
+            // Show/hide tip sections
+            if (selectedPaymentMethod === 'cash') {
+                cashTipSection.classList.remove('hidden');
+                cardTipSection.classList.add('hidden');
+            } else {
+                cashTipSection.classList.add('hidden');
+                cardTipSection.classList.remove('hidden');
+            }
+        });
+    });
+
+    // Tip buttons (for card)
+    tipButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tipButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            selectedTip = parseFloat(button.dataset.tip);
+        });
+    });
+
+    // Country input with suggestions
+    countryInputElement.addEventListener('input', (e) => {
+        countryInput = e.target.value;
+        showCountrySuggestions(countryInput);
+    });
+
+    // Custom tip input
+    customTipInput.addEventListener('input', (e) => {
+        customTip = e.target.value;
+    });
+
+    // Save tour button
+    saveTourButton.addEventListener('click', saveTour);
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container') && !e.target.closest('.suggestions-container')) {
+            suggestionsContainer.classList.remove('show');
+        }
+    });
+}
+
+// Country suggestions
+function showCountrySuggestions(query) {
+    suggestionsContainer.innerHTML = '';
     
-    /* Grayscale */
-    --gray-50: #F9FAFB;
-    --gray-100: #F3F4F6;
-    --gray-200: #E5E7EB;
-    --gray-300: #D1D5DB;
-    --gray-400: #9CA3AF;
-    --gray-500: #6B7280;
-    --gray-600: #4B5563;
-    --gray-700: #374151;
-    --gray-800: #1F2937;
-    --gray-900: #111827;
+    if (!query || query.length < 1) {
+        suggestionsContainer.classList.remove('show');
+        return;
+    }
+
+    const filtered = COUNTRIES.filter(country => 
+        country.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 5);
+
+    if (filtered.length === 0) {
+        suggestionsContainer.classList.remove('show');
+        return;
+    }
+
+    filtered.forEach(country => {
+        const suggestionItem = document.createElement('div');
+        suggestionItem.className = 'suggestion-item';
+        suggestionItem.textContent = country;
+        suggestionItem.addEventListener('click', () => {
+            countryInputElement.value = country;
+            countryInput = country;
+            suggestionsContainer.classList.remove('show');
+        });
+        suggestionsContainer.appendChild(suggestionItem);
+    });
+
+    suggestionsContainer.classList.add('show');
+}
+
+// Save tour
+function saveTour() {
+    if (!countryInput) {
+        alert('Please select a country');
+        return;
+    }
+
+    const tip = selectedPaymentMethod === 'cash' 
+        ? (customTip ? parseFloat(customTip) : 0)
+        : selectedTip;
+
+    const tour = {
+        id: Date.now(),
+        country: countryInput,
+        passengers: selectedPassengers,
+        paymentMethod: selectedPaymentMethod,
+        tip: tip,
+        amount: FIXED_AMOUNT,
+        timestamp: new Date().toISOString()
+    };
+
+    tours.push(tour);
+    saveToLocalStorage();
+    renderToursList();
+    updateTodayStats();
+    resetForm();
+
+    // Show success message
+    showSuccessMessage();
+}
+
+// Reset form
+function resetForm() {
+    // Reset to default values
+    passengerButtons.forEach((btn, index) => {
+        if (index === 0) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    selectedPassengers = 1;
+
+    paymentButtons.forEach(btn => {
+        if (btn.dataset.payment === 'cash') {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    selectedPaymentMethod = 'cash';
+
+    tipButtons.forEach((btn, index) => {
+        if (index === 0) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    selectedTip = 0;
+
+    countryInputElement.value = '';
+    countryInput = '';
+    suggestionsContainer.classList.remove('show');
+
+    customTipInput.value = '';
+    customTip = '';
+
+    // Show cash tip section
+    cashTipSection.classList.remove('hidden');
+    cardTipSection.classList.add('hidden');
+}
+
+// Render tours list
+function renderToursList() {
+    toursListElement.innerHTML = '';
+
+    // Get today's tours
+    const today = new Date().toDateString();
+    const todayTours = tours.filter(tour => {
+        const tourDate = new Date(tour.timestamp).toDateString();
+        return tourDate === today;
+    });
+
+    if (todayTours.length === 0) {
+        const noToursElement = document.createElement('div');
+        noToursElement.className = 'no-tours-text';
+        noToursElement.textContent = 'No tours today yet';
+        toursListElement.appendChild(noToursElement);
+        return;
+    }
+
+    // Sort by timestamp (newest first)
+    todayTours.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Render each tour
+    todayTours.forEach(tour => {
+        const tourElement = createTourElement(tour);
+        toursListElement.appendChild(tourElement);
+    });
+}
+
+// Create tour element
+function createTourElement(tour) {
+    const clone = tourTemplate.content.cloneNode(true);
+    const tourCard = clone.querySelector('.tour-card');
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    // Set country and passengers
+    const countryElement = tourCard.querySelector('.tour-country');
+    countryElement.textContent = `${tour.country} - ${tour.passengers} pax`;
     
-    /* Border Radius */
-    --radius-sm: 0.375rem;
-    --radius: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
-    --radius-2xl: 2rem;
+    // Set time
+    const timeElement = tourCard.querySelector('.tour-time');
+    const tourTime = new Date(tour.timestamp);
+    timeElement.textContent = tourTime.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
     
-    /* Spacing */
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-5: 1.25rem;
-    --space-6: 1.5rem;
-    --space-8: 2rem;
-    --space-10: 2.5rem;
-    --space-12: 3rem;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #F8F9FA;
-    color: var(--gray-900);
-    line-height: 1.5;
-}
-
-.app-container {
-    max-width: 100%;
-    min-height: 100vh;
-    margin: 0 auto;
-    background-color: #F8F9FA;
-}
-
-/* Header */
-.app-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-4) var(--space-6);
-    background-color: #F8F9FA;
-    z-index: 100;
-    border-bottom: 1px solid var(--gray-200);
-}
-
-.header-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--gray-900);
-}
-
-.menu-button {
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--gray-800);
-    font-size: 1.25rem;
-}
-
-/* Main Content */
-.main-content {
-    padding: 5.5rem var(--space-6) var(--space-6);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* Progress Card */
-.progress-card {
-    background-color: white;
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
-    margin-bottom: var(--space-8);
-    box-shadow: var(--shadow-md);
-}
-
-.progress-label {
-    font-size: 0.75rem;
-    color: var(--gray-600);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--space-2);
-    text-transform: uppercase;
-}
-
-.progress-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.progress-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-
-.check-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--secondary-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--secondary);
-}
-
-.check-circle i {
-    font-size: 1.25rem;
-}
-
-/* Section Styles */
-.section {
-    margin-bottom: var(--space-8);
-}
-
-.section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--gray-900);
-    margin-bottom: var(--space-3);
-}
-
-/* Passengers Row */
-.passengers-row {
-    display: flex;
-    gap: var(--space-3);
-}
-
-.passenger-btn {
-    flex: 1;
-    aspect-ratio: 1;
-    background-color: var(--gray-300);
-    border-radius: var(--radius-xl);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-    transition: all 0.2s ease;
-}
-
-.passenger-btn.active {
-    background-color: var(--accent);
-}
-
-.passenger-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-/* Search Container */
-.search-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background-color: white;
-    border-radius: var(--radius-2xl);
-    padding: var(--space-4) var(--space-6);
-    border: 2px solid var(--gray-200);
-}
-
-.search-icon {
-    margin-right: var(--space-3);
-    color: var(--gray-400);
-    font-size: 1.25rem;
-}
-
-.search-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    color: var(--gray-900);
-    background: transparent;
-}
-
-.search-input::placeholder {
-    color: var(--gray-400);
-}
-
-/* Suggestions Container */
-.suggestions-container {
-    position: absolute;
-    width: 100%;
-    max-width: calc(600px - 3rem);
-    background-color: white;
-    border-radius: var(--radius-md);
-    margin-top: var(--space-2);
-    box-shadow: var(--shadow-lg);
-    z-index: 10;
-    max-height: 200px;
-    overflow-y: auto;
-    display: none;
-}
-
-.suggestions-container.show {
-    display: block;
-}
-
-.suggestion-item {
-    padding: var(--space-4) var(--space-6);
-    border-bottom: 1px solid var(--gray-100);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.suggestion-item:hover {
-    background-color: var(--gray-50);
-}
-
-.suggestion-text {
-    font-size: 0.9375rem;
-    color: var(--gray-900);
-}
-
-/* Payment Row */
-.payment-row {
-    display: flex;
-    gap: var(--space-4);
-}
-
-.payment-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    background-color: white;
-    border-radius: var(--radius-xl);
-    padding: var(--space-4);
-    border: 2px solid var(--gray-200);
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--gray-500);
-    transition: all 0.2s ease;
-}
-
-.payment-btn.active {
-    background-color: var(--secondary-light);
-    border-color: var(--secondary);
-    color: var(--secondary);
-}
-
-.payment-btn i {
-    font-size: 1.25rem;
-}
-
-.payment-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-/* Tip Row */
-.tip-row {
-    display: flex;
-    gap: var(--space-3);
-}
-
-.tip-btn {
-    flex: 1;
-    padding: var(--space-4);
-    background-color: white;
-    border-radius: var(--radius-xl);
-    border: 2px solid var(--gray-200);
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--gray-500);
-    transition: all 0.2s ease;
-}
-
-.tip-btn.active {
-    background-color: var(--gray-600);
-    border-color: var(--gray-600);
-    color: white;
-}
-
-.tip-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-/* Amount Input */
-.amount-input {
-    width: 100%;
-    background-color: white;
-    border-radius: var(--radius-md);
-    padding: var(--space-4) var(--space-6);
-    font-size: 1rem;
-    color: var(--gray-900);
-    border: 2px solid var(--gray-200);
-    outline: none;
-}
-
-.amount-input::placeholder {
-    color: var(--gray-400);
-}
-
-.amount-input:focus {
-    border-color: var(--primary);
-}
-
-/* Amount Display */
-.amount-display {
-    background-color: var(--gray-100);
-    border-radius: var(--radius-md);
-    padding: var(--space-4) var(--space-6);
-    border: 2px solid var(--gray-200);
-    text-align: center;
-}
-
-.amount-display-text {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-
-/* Save Button */
-.save-btn {
-    width: 100%;
-    background-color: var(--primary);
-    border-radius: var(--radius-2xl);
-    padding: var(--space-5);
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--space-8);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-    transition: all 0.2s ease;
-}
-
-.save-btn:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-.save-btn:active {
-    transform: translateY(0);
-}
-
-/* Summary Section */
-.summary-section {
-    margin-top: var(--space-4);
-}
-
-.summary-title {
-    font-size: 0.75rem;
-    color: var(--gray-600);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--space-3);
-    text-transform: uppercase;
-}
-
-/* Tours List */
-.tours-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
-
-/* Tour Card */
-.tour-card {
-    background-color: white;
-    border-radius: var(--radius-xl);
-    padding: var(--space-4);
-    box-shadow: var(--shadow-md);
-}
-
-.tour-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--space-3);
-}
-
-.tour-info {
-    flex: 1;
-}
-
-.tour-country {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--space-2);
-}
-
-.tour-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.tour-time {
-    font-size: 0.75rem;
-    color: var(--gray-400);
-}
-
-.divider {
-    color: var(--gray-300);
-}
-
-.payment-badge {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.payment-badge i {
-    font-size: 0.875rem;
-    color: var(--secondary);
-}
-
-.payment-text {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--gray-600);
-}
-
-.tour-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--gray-100);
-}
-
-.amount-container {
-    flex: 1;
-}
-
-.amount {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--space-1);
-}
-
-.tour-tip {
-    font-size: 0.75rem;
-    color: var(--secondary);
-}
-
-.total-container {
-    text-align: right;
-}
-
-.tour-total-label {
-    font-size: 0.6875rem;
-    color: var(--gray-400);
-    margin-bottom: var(--space-1);
-}
-
-.total {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-/* No Tours Text */
-.no-tours-text {
-    font-size: 0.875rem;
-    color: var(--gray-400);
-    text-align: center;
-    padding: var(--space-5) 0;
-}
-
-/* Utility Classes */
-.hidden {
-    display: none !important;
-}
-
-/* Responsive Design */
-@media (max-width: 640px) {
-    .main-content {
-        padding-left: var(--space-4);
-        padding-right: var(--space-4);
+    // Set payment method
+    const paymentIcon = tourCard.querySelector('.payment-badge i');
+    const paymentText = tourCard.querySelector('.payment-text');
+    
+    if (tour.paymentMethod === 'cash') {
+        paymentIcon.className = 'fas fa-money-bill';
+        paymentIcon.style.color = '#10B981';
+        paymentText.textContent = 'Cash';
+    } else {
+        paymentIcon.className = 'fas fa-credit-card';
+        paymentIcon.style.color = '#3B82F6';
+        paymentText.textContent = 'Card';
     }
     
-    .app-header {
-        padding-left: var(--space-4);
-        padding-right: var(--space-4);
+    // Set amounts
+    const amountElement = tourCard.querySelector('.amount');
+    const tipElement = tourCard.querySelector('.tour-tip');
+    const totalElement = tourCard.querySelector('.total');
+    
+    amountElement.textContent = `${tour.amount.toFixed(2)} €`;
+    
+    if (tour.tip > 0) {
+        tipElement.textContent = `+ ${tour.tip.toFixed(2)} € tip`;
+    } else {
+        tipElement.textContent = '';
     }
     
-    .passenger-btn {
-        font-size: 1.75rem;
+    const total = tour.amount + tour.tip;
+    totalElement.textContent = `${total.toFixed(2)} €`;
+    
+    return tourCard;
+}
+
+// Update today's stats
+function updateTodayStats() {
+    const today = new Date().toDateString();
+    const todayTours = tours.filter(tour => {
+        const tourDate = new Date(tour.timestamp).toDateString();
+        return tourDate === today;
+    });
+    
+    todayToursElement.textContent = `${todayTours.length} Tours Completed`;
+}
+
+// Save to localStorage
+function saveToLocalStorage() {
+    localStorage.setItem('tours', JSON.stringify(tours));
+}
+
+// Show success message
+function showSuccessMessage() {
+    const message = document.createElement('div');
+    message.className = 'success-message';
+    message.textContent = 'Tour saved successfully!';
+    message.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #10B981;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+        message.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            document.body.removeChild(message);
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
     
-    .tip-btn {
-        font-size: 0.8125rem;
-        padding: var(--space-3);
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
     }
-}
+    
+    .success-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #10B981;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    }
+`;
+document.head.appendChild(style);
 
-/* Animation for new tour */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.tour-card {
-    animation: fadeIn 0.3s ease-out;
-}
+// Initialize the app
+document.addEventListener('DOMContentLoaded', init);
