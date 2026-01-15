@@ -3,153 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Viajes</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Control de Viajes - Coche Eléctrico</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <h1 class="header-title">New Tour</h1>
-            <button class="menu-button">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+    <div class="container">
+        <header>
+            <h1>Control de Viajes</h1>
+            <p id="current-date">Registro para conductor de coche eléctrico</p>
         </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Progress Card -->
-            <div class="progress-card">
-                <div class="progress-label">TODAY'S PROGRESS:</div>
-                <div class="progress-row">
-                    <div class="progress-value" id="today-tours">0 Tours Completed</div>
-                    <div class="check-circle">
-                        <i class="fas fa-check"></i>
+        
+        <div class="tab-container">
+            <div class="tab active" onclick="switchTab('register')">Nuevo Viaje</div>
+            <div class="tab" onclick="switchTab('summary')">Resumen</div>
+            <div class="tab" onclick="switchTab('stats')">Estadísticas</div>
+            <div class="tab" onclick="switchTab('history')">Historial</div>
+        </div>
+        
+        <div id="register-tab" class="tab-content active">
+            <div class="card">
+                <h2>Registrar Nuevo Viaje</h2>
+                <form id="trip-form">
+                    <div class="form-group">
+                        <label for="country">País:</label>
+                        <select id="country" required>
+                            <option value="">Selecciona un país</option>
+                            <option value="España">España</option>
+                            <option value="Francia">Francia</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Alemania">Alemania</option>
+                            <option value="Italia">Italia</option>
+                            <option value="Reino Unido">Reino Unido</option>
+                            <option value="Andorra">Andorra</option>
+                            <option value="Austria">Austria</option>
+                            <option value="Bélgica">Bélgica</option>
+                            <option value="Bulgaria">Bulgaria</option>
+                            <option value="Croacia">Croacia</option>
+                            <option value="Dinamarca">Dinamarca</option>
+                            <option value="Finlandia">Finlandia</option>
+                            <option value="Grecia">Grecia</option>
+                            <option value="Hungría">Hungría</option>
+                            <option value="Irlanda">Irlanda</option>
+                            <option value="Luxemburgo">Luxemburgo</option>
+                            <option value="Mónaco">Mónaco</option>
+                            <option value="Noruega">Noruega</option>
+                            <option value="Países Bajos">Países Bajos</option>
+                            <option value="Polonia">Polonia</option>
+                            <option value="República Checa">República Checa</option>
+                            <option value="Rumanía">Rumanía</option>
+                            <option value="Suecia">Suecia</option>
+                            <option value="Suiza">Suiza</option>
+                            <option value="Turquía">Turquía</option>
+                            <option value="Ucrania">Ucrania</option>
+                            <option value="Rusia">Rusia</option>
+                            <option value="Estados Unidos">Estados Unidos</option>
+                            <option value="Canadá">Canadá</option>
+                            <option value="México">México</option>
+                            <option value="Brasil">Brasil</option>
+                            <option value="Argentina">Argentina</option>
+                            <option value="Chile">Chile</option>
+                            <option value="China">China</option>
+                            <option value="Japón">Japón</option>
+                            <option value="Australia">Australia</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
-                </div>
-            </div>
-
-            <!-- Passengers Section -->
-            <div class="section">
-                <h2 class="section-title">Passengers</h2>
-                <div class="passengers-row">
-                    <button class="passenger-btn active" data-passengers="1">1</button>
-                    <button class="passenger-btn" data-passengers="2">2</button>
-                    <button class="passenger-btn" data-passengers="3">3</button>
-                    <button class="passenger-btn" data-passengers="4">4</button>
-                    <button class="passenger-btn" data-passengers="5">5</button>
-                </div>
-            </div>
-
-            <!-- Country Section -->
-            <div class="section">
-                <h2 class="section-title">Country</h2>
-                <div class="search-container">
-                    <i class="fas fa-search search-icon"></i>
-                    <input 
-                        type="text" 
-                        class="search-input" 
-                        id="country-input" 
-                        placeholder="Belgium"
-                        autocomplete="off"
-                    >
-                </div>
-                <div class="suggestions-container" id="country-suggestions">
-                    <!-- Suggestions will be populated here -->
-                </div>
-            </div>
-
-            <!-- Payment Method -->
-            <div class="section">
-                <h2 class="section-title">Payment Method</h2>
-                <div class="payment-row">
-                    <button class="payment-btn active" data-payment="cash">
-                        <i class="fas fa-money-bill"></i>
-                        <span>Cash</span>
-                    </button>
-                    <button class="payment-btn" data-payment="card">
-                        <i class="fas fa-credit-card"></i>
-                        <span>Card</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tip Section -->
-            <div class="section" id="cash-tip-section">
-                <h2 class="section-title">Tip (Optional)</h2>
-                <input 
-                    type="number" 
-                    class="amount-input" 
-                    id="custom-tip-input" 
-                    placeholder="Custom tip amount"
-                    step="0.01"
-                    min="0"
-                >
-            </div>
-
-            <div class="section hidden" id="card-tip-section">
-                <h2 class="section-title">Tip</h2>
-                <div class="tip-row">
-                    <button class="tip-btn active" data-tip="0">No Tip</button>
-                    <button class="tip-btn" data-tip="7">€7</button>
-                    <button class="tip-btn" data-tip="10.5">€10.5</button>
-                    <button class="tip-btn" data-tip="14">€14</button>
-                </div>
-            </div>
-
-            <!-- Amount Section -->
-            <div class="section">
-                <h2 class="section-title">Amount</h2>
-                <div class="amount-display">
-                    <div class="amount-display-text">€70.00</div>
-                </div>
-            </div>
-
-            <!-- Save Button -->
-            <button class="save-btn" id="save-tour-btn">
-                SAVE TOUR
-            </button>
-
-            <!-- Summary Section -->
-            <div class="summary-section">
-                <h2 class="summary-title">SUMMARY OF DAY</h2>
-                <div class="tours-list" id="tours-list">
-                    <!-- Tours will be displayed here -->
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Tour Template (Hidden) -->
-    <template id="tour-template">
-        <div class="tour-card">
-            <div class="tour-header">
-                <div class="tour-info">
-                    <h3 class="tour-country">Belgium - 2 pax</h3>
-                    <div class="tour-meta">
-                        <span class="tour-time">14:30</span>
-                        <span class="divider">|</span>
-                        <div class="payment-badge">
-                            <i class="fas fa-money-bill"></i>
-                            <span class="payment-text">Cash</span>
+                    
+                    <div class="form-group">
+                        <label for="passengers">Número de pasajeros (máx. 5):</label>
+                        <input type="number" id="passengers" min="1" max="5" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Importe del viaje (€):</label>
+                        <input type="number" id="amount" value="70" readonly>
+                        <small>Precio fijo: 70€</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Método de pago:</label>
+                        <div class="payment-btns">
+                            <div class="payment-btn" id="cash-btn">Efectivo</div>
+                            <div class="payment-btn" id="card-btn">Tarjeta</div>
                         </div>
+                        <input type="hidden" id="payment-method" required>
                     </div>
-                </div>
+                    
+                    <div class="form-group" id="cash-tip-section">
+                        <label for="cash-tip">Propina en efectivo (€):</label>
+                        <input type="number" id="cash-tip" step="0.01" min="0" value="0">
+                    </div>
+                    
+                    <div class="form-group hidden" id="card-tip-section">
+                        <label>Propina con tarjeta:</label>
+                        <div class="tip-options">
+                            <div class="tip-btn">0 €</div>
+                            <div class="tip-btn">7 €</div>
+                            <div class="tip-btn">10.5 €</div>
+                            <div class="tip-btn">14 €</div>
+                        </div>
+                        <input type="hidden" id="card-tip" value="0">
+                    </div>
+                    
+                    <button type="submit" class="btn">Guardar Viaje</button>
+                </form>
             </div>
-
-            <div class="tour-footer">
-                <div class="amount-container">
-                    <div class="amount">70.00 €</div>
-                    <div class="tour-tip">+ 5.00 € tip</div>
-                </div>
-                <div class="total-container">
-                    <div class="tour-total-label">Total</div>
-                    <div class="total">75.00 €</div>
+            
+            <div class="card">
+                <h2>Viajes de Hoy</h2>
+                <div class="trip-list" id="trip-list">
+                    <!-- Los viajes se mostrarán aquí -->
                 </div>
             </div>
         </div>
-    </template>
+        
+        <div id="summary-tab" class="tab-content">
+            <div class="card">
+                <h2>Resumen del Día</h2>
+                <div class="summary-item">
+                    <span>Total viajes:</span>
+                    <span id="total-trips">0</span>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Ingresos con Tarjeta</h3>
+                <div class="summary-item">
+                    <span id="card-rides-label">Total viajes (70€ x 0 viajes):</span>
+                    <span id="total-card-rides">0.00 €</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total propinas con tarjeta:</span>
+                    <span id="total-card-tips">0.00 €</span>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Ingresos en Efectivo</h3>
+                <div class="summary-item">
+                    <span id="cash-rides-label">Total viajes (70€ x 0 viajes):</span>
+                    <span id="total-cash-rides">0.00 €</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total propinas en efectivo:</span>
+                    <span id="total-cash-tips">0.00 €</span>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Efectivo a entregar</h3>
+                <div class="calculation">
+                    <div id="cash-delivery-calculation">0.00€ - 0.00€ = 0.00€</div>
+                    <div><strong id="cash-to-deliver">0.00 € a entregar en sobre</strong></div>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Resumen General</h3>
+                <div class="summary-item">
+                    <span>Total ingresos por viajes:</span>
+                    <span id="total-rides">0.00 €</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total propinas:</span>
+                    <span id="total-tips">0.00 €</span>
+                </div>
+                <div class="summary-item summary-total">
+                    <span>Ganancia total del día:</span>
+                    <span id="total-amount">0.00 €</span>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="exportData()" style="background: var(--accent);">Exportar Datos del Mes</button>
+            <button class="btn" onclick="resetDay()" style="background: var(--danger);">Reiniciar Día</button>
+        </div>
+        
+        <div id="stats-tab" class="tab-content">
+            <div class="card">
+                <h2>Estadísticas del Mes</h2>
+                <div class="form-group">
+                    <label for="stats-month-select">Seleccionar mes:</label>
+                    <select id="stats-month-select">
+                        <!-- Opciones se generarán con JavaScript -->
+                    </select>
+                </div>
+                
+                <h3>Resumen Mensual</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stats-total-trips">0</div>
+                        <div class="stat-label">Total Viajes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stats-total-passengers">0</div>
+                        <div class="stat-label">Total Pasajeros</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stats-cash-trips">0</div>
+                        <div class="stat-label">Viajes Efectivo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stats-card-trips">0</div>
+                        <div class="stat-label">Viajes Tarjeta</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Distribución por País</h3>
+                <div class="country-list" id="country-stats">
+                    <!-- Estadísticas por país se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="history-tab" class="tab-content">
+            <div class="card">
+                <h2>Historial Mensual</h2>
+                <div class="form-group">
+                    <label for="month-select">Seleccionar mes:</label>
+                    <select id="month-select">
+                        <!-- Opciones se generarán con JavaScript -->
+                    </select>
+                </div>
+                
+                <div id="monthly-summary">
+                    <!-- Resumen mensual se mostrará aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
