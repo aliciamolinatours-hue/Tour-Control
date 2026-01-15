@@ -739,7 +739,7 @@ body {
     font-weight: 700;
 }
 
-/* Export Button Styles - Keep this for general export button styling */
+/* Export Button Styles */
 .export-btn {
     width: 100%;
     padding: var(--space-lg) var(--space-xl);
