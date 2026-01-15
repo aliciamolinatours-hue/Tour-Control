@@ -23,22 +23,6 @@
 
         <!-- Main Content -->
         <main class="app-main">
-            <!-- Navigation Tabs -->
-            <nav class="tab-navigation">
-                <button class="tab-btn active" data-tab="new-tour">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>New Tour</span>
-                </button>
-                <button class="tab-btn" data-tab="summary">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Summary</span>
-                </button>
-                <button class="tab-btn" data-tab="stats">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Stats</span>
-                </button>
-            </nav>
-
             <!-- New Tour Tab -->
             <div id="new-tour" class="tab-content active">
                 <!-- Today's Progress -->
@@ -98,13 +82,33 @@
                     </div>
                 </div>
 
-                <!-- Tip Section -->
+                <!-- Cash Tip Section -->
                 <div class="input-section" id="cash-tip-section">
                     <label class="section-label">Tip (optional)</label>
                     <input 
                         type="number" 
                         class="custom-input" 
                         id="custom-tip-input" 
+                        placeholder="Enter custom tip amount"
+                        step="0.01"
+                        min="0"
+                    >
+                </div>
+
+                <!-- Card Tip Section -->
+                <div class="input-section hidden" id="card-tip-section">
+                    <label class="section-label">Tip</label>
+                    <div class="card-tip-selector">
+                        <button class="card-tip-btn" data-tip="custom">Custom</button>
+                        <button class="card-tip-btn active" data-tip="0">€0</button>
+                        <button class="card-tip-btn" data-tip="7">€7</button>
+                        <button class="card-tip-btn" data-tip="10.5">€10.5</button>
+                        <button class="card-tip-btn" data-tip="14">€14</button>
+                    </div>
+                    <input 
+                        type="number" 
+                        class="custom-input hidden" 
+                        id="card-custom-tip-input" 
                         placeholder="Enter custom tip amount"
                         step="0.01"
                         min="0"
@@ -133,7 +137,6 @@
                         </div>
                     </div>
                     <div class="tours-list" id="today-tours-list">
-                        <!-- Tours will be displayed here -->
                         <div class="empty-state">
                             <i class="fas fa-road"></i>
                             <p>No tours recorded today</p>
@@ -208,7 +211,6 @@
                 <button class="export-btn" id="export-data-btn">
                     <i class="fas fa-file-export"></i>
                     Export Data
-                    <div class="export-dotted-line"></div>
                 </button>
             </div>
 
@@ -263,14 +265,23 @@
                         </div>
                     </div>
 
-                    <!-- Country Distribution -->
-                    <div class="country-distribution">
-                        <h3>Top Countries</h3>
-                        <div class="country-list" id="top-countries-list">
-                            <!-- Countries will be populated by JavaScript -->
+                    <!-- Top Breakdown -->
+                    <div class="top-breakdown-section">
+                        <div class="breakdown-header">
+                            <h3>Top Breakdown</h3>
+                            <div class="sort-controls">
+                                <span class="sort-label">Sort by:</span>
+                                <div class="sort-buttons">
+                                    <button class="sort-btn active" data-sort="tours">Tours</button>
+                                    <button class="sort-btn" data-sort="pax">Pax</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="breakdown-list" id="top-breakdown-list">
+                            <!-- Breakdown items will be populated here -->
                             <div class="empty-state">
                                 <i class="fas fa-globe-europe"></i>
-                                <p>No country data available</p>
+                                <p>No breakdown data available</p>
                             </div>
                         </div>
                     </div>
@@ -327,14 +338,15 @@
         </div>
     </template>
 
-    <!-- Country Stat Template -->
-    <template id="country-stat-template">
-        <div class="country-stat-item">
-            <div class="country-info">
-                <span class="country-name">Country</span>
-                <span class="country-tours">0 tours</span>
+    <!-- Breakdown Item Template -->
+    <template id="breakdown-item-template">
+        <div class="breakdown-item">
+            <div class="breakdown-country">Belgium</div>
+            <div class="breakdown-stats">
+                <span class="breakdown-tours">12 tours</span>
+                <span class="breakdown-separator">|</span>
+                <span class="breakdown-pax">58 pax</span>
             </div>
-            <div class="country-revenue">€0.00</div>
         </div>
     </template>
 
