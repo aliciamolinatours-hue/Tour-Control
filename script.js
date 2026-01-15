@@ -73,7 +73,6 @@ const elements = {
     // Templates
     countrySuggestionTemplate: document.getElementById('country-suggestion-template'),
     tourItemTemplate: document.getElementById('tour-item-template'),
-    breakdownItemTemplate: document.getElementById('breakdown-item-template'),
     
     // Navigation
     navItems: document.querySelectorAll('.nav-item'),
@@ -130,28 +129,32 @@ function setupEventListeners() {
             
             // Show/hide tip sections
             if (state.selectedPaymentMethod === 'cash') {
-                elements.cashTipSection.style.display = 'block';
-                elements.cardTipSection.style.display = 'none';
+                elements.cashTipSection.classList.remove('hidden');
+                elements.cardTipSection.classList.add('hidden');
             } else {
-                elements.cashTipSection.style.display = 'none';
-                elements.cardTipSection.style.display = 'block';
+                elements.cashTipSection.classList.add('hidden');
+                elements.cardTipSection.classList.remove('hidden');
             }
         });
     });
 
     // Card tip buttons
     elements.cardTipButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
             elements.cardTipButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
             const tipValue = btn.dataset.tip;
             if (tipValue === 'custom') {
                 elements.cardCustomTipInput.classList.remove('hidden');
-                state.selectedTip = state.cardCustomTip ? parseFloat(state.cardCustomTip) : 0;
+                elements.cardCustomTipInput.focus();
+                state.selectedTip = 0;
             } else {
                 elements.cardCustomTipInput.classList.add('hidden');
                 state.selectedTip = parseFloat(tipValue);
+                elements.cardCustomTipInput.value = '';
+                state.cardCustomTip = '';
             }
         });
     });
@@ -323,9 +326,9 @@ function saveTour() {
     showNotification('Tour saved successfully!', 'success');
 }
 
-// Reset Form
+// Reset Form - Ahora funciona correctamente
 function resetForm() {
-    // Reset passenger selection
+    // Reset passenger selection to 1
     elements.passengerButtons.forEach((btn, index) => {
         if (index === 0) {
             btn.classList.add('active');
@@ -340,7 +343,7 @@ function resetForm() {
     state.countryInput = '';
     elements.suggestionsDropdown.style.display = 'none';
 
-    // Reset payment method
+    // Reset payment method to cash
     elements.paymentButtons.forEach(btn => {
         if (btn.dataset.method === 'cash') {
             btn.classList.add('active');
@@ -350,24 +353,28 @@ function resetForm() {
         }
     });
 
-    // Reset tip sections
-    elements.cashTipSection.style.display = 'block';
-    elements.cardTipSection.style.display = 'none';
-    elements.customTipInput.value = '';
+    // Reset tip sections - show cash, hide card
+    elements.cashTipSection.classList.remove('hidden');
+    elements.cardTipSection.classList.add('hidden');
+    
+    // Reset cash tip input
+    elements.customTipInput.value = '0';
     state.customTip = '';
     
-    // Reset card tip selection
+    // Reset card tip selection to €0
     elements.cardTipButtons.forEach((btn, index) => {
-        if (index === 1) { // €0 button
+        if (index === 1) { // €0 button (index 0 is Custom, 1 is €0)
             btn.classList.add('active');
-            state.selectedTip = 0;
         } else {
             btn.classList.remove('active');
         }
     });
-    elements.cardCustomTipInput.value = '';
+    
+    // Reset card custom tip
+    elements.cardCustomTipInput.value = '0';
     elements.cardCustomTipInput.classList.add('hidden');
     state.cardCustomTip = '';
+    state.selectedTip = 0;
 }
 
 // Update New Tour Tab
