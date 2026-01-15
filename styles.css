@@ -739,6 +739,7 @@ body {
     font-weight: 700;
 }
 
+/* Export Button Styles - Keep this for general export button styling */
 .export-btn {
     width: 100%;
     padding: var(--space-lg) var(--space-xl);
@@ -889,6 +890,7 @@ body {
     border-radius: var(--radius-xl);
     padding: var(--space-xl);
     border: 1px solid var(--gray-200);
+    margin-bottom: var(--space-2xl);
 }
 
 .breakdown-header {
@@ -983,6 +985,12 @@ body {
 
 .breakdown-pax {
     font-weight: 600;
+}
+
+/* Export Data Button in Stats Tab */
+#export-data-btn {
+    margin-top: var(--space-2xl);
+    width: 100%;
 }
 
 /* Bottom Navigation */
